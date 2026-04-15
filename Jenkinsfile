@@ -67,7 +67,7 @@ pipeline {
 
     post {
         always {
-           // cleanWs()
-        }
+           echo "Skipping cleanup for destroy testing"       
+ }
     }
 }
