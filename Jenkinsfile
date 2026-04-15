@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Choose Terraform action')
+    }
+
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
     }
@@ -14,9 +18,6 @@ pipeline {
         }
 
         stage('Terraform Validate') {
-            when {
-                branch 'main'
-            }
             steps {
                 sh 'terraform validate -no-color'
             }
@@ -24,7 +25,7 @@ pipeline {
 
         stage('Terraform Plan') {
             when {
-                branch 'main'
+                expression { params.ACTION == 'apply' }
             }
             steps {
                 sh 'terraform plan -no-color'
@@ -33,41 +34,36 @@ pipeline {
 
         stage('Terraform Apply') {
             when {
-                branch 'main'
+                expression { params.ACTION == 'apply' }
             }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
                     sh 'terraform apply -auto-approve -no-color'
-
                 }
             }
         }
 
         stage('Terraform Destroy') {
             when {
-                branch 'main'
+                expression { params.ACTION == 'destroy' }
             }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
                     sh 'terraform destroy -auto-approve -no-color'
-
                 }
             }
         }
-
     }
 
     post {
         always {
-            cleanWs()
+            echo "Skipping cleanup for now (local state testing)"
         }
     }
 }
