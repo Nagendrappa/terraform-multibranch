@@ -49,7 +49,7 @@ pipeline {
 
         stage('Terraform Destroy') {
             when {
-                branch 'destroy'
+                branch 'main'
             }
             steps {
                 withCredentials([[
